@@ -1,7 +1,5 @@
 package lib
 
-import "fmt"
-
 type FgConc struct {
 	counter  int
 	n        int
@@ -30,7 +28,6 @@ func (fgc *FgConc) dispatch() {
 	for _, fn := range fgc.handlers {
 		go func(fn FgHandler) {
 			err := fn()
-			fmt.Println("err: ", err)
 			if err != nil {
 				fgc.errCh <- err
 				return
@@ -42,18 +39,16 @@ func (fgc *FgConc) dispatch() {
 
 // WhenDone
 func (fg *FgConc) WhenDone() error {
+	defer close(fg.errCh)
 	fg.dispatch()
 
-	fmt.Println("sampe sini")
 	for fg.n < fg.counter {
 		err := <-fg.errCh
 		if err != nil {
-			close(fg.errCh)
 			return err
 		}
 		fg.n += 1
 	}
-	close(fg.errCh)
 
 	return nil
 }
